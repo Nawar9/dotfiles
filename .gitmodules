@@ -1,0 +1,15 @@
+[submodule ".config/zsh/plugins/auto-notify"]
+	path = .config/zsh/plugins/auto-notify
+	url = https://github.com/MichaelAquilina/zsh-auto-notify.git
+[submodule ".config/zsh/plugins/you-should-use"]
+	path = .config/zsh/plugins/you-should-use
+	url = https://github.com/MichaelAquilina/zsh-you-should-use.git
+[submodule ".config/zsh/plugins/zsh-autosuggestions"]
+	path = .config/zsh/plugins/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions
+[submodule ".config/zsh/plugins/zsh-history-substring-search"]
+	path = .config/zsh/plugins/zsh-history-substring-search
+	url = https://github.com/zsh-users/zsh-history-substring-search
+[submodule ".config/zsh/plugins/zsh-syntax-highlighting"]
+	path = .config/zsh/plugins/zsh-syntax-highlighting
+	url = https://github.com/zsh-users/zsh-syntax-highlighting.git
