@@ -1,0 +1,18 @@
+font-color = #FF3333
+
+[keys]
+Left = prev_file
+H = step_left
+h = prev_file
+Right = next_file
+L = step_right
+l = next_file
+Up = zoom_in
+K = step_up
+k = zoom_in
+Down = zoom_out
+J = step_down
+j = zoom_out
+underscore = zoom_out
+backslash = flip_vertical
+bar = flip_horizontal

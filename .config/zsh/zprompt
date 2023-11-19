@@ -1,0 +1,99 @@
+# Prompt
+setopt PROMPT_SUBST
+
+ZSH_THEME_GIT_PROMPT_PREFIX="%F{blue}git:(%F{red}"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%F{blue}) "
+
+ZSH_THEME_GIT_PROMPT_REMOTE_STATUS_PREFIX=" %f%b"
+ZSH_THEME_GIT_PROMPT_AHEAD_REMOTE="%B%F{magenta}↑"
+ZSH_THEME_GIT_PROMPT_BEHIND_REMOTE="%B%F{magenta}↓"
+ZSH_THEME_GIT_PROMPT_DIVERGED_REMOTE="%B%F{magenta}↕"
+
+ZSH_THEME_GIT_PROMPT_DIRTY="%F{yellow}*"
+
+ZSH_THEME_DURATION_PREFIX="%F{yellow}"
+[ "$__MINIMAL_ICONS" = true ] && ZSH_THEME_DURATION_SUFFIX=" " || ZSH_THEME_DURATION_SUFFIX=" 󱦟 "
+ZSH_THEME_DURATION_THRESHOLD=5
+
+alias __git_prompt="command git --no-optional-locks"
+
+__git_prompt_info()
+{
+	__git_prompt rev-parse --git-dir &> "/dev/null" || return 0
+
+	local ref
+	ref="$(__git_prompt symbolic-ref --short HEAD 2> "/dev/null")" \
+		|| ref="$(__git_prompt describe --tags --exact-match HEAD 2> "/dev/null")" \
+		|| ref="$(__git_prompt rev-parse --short HEAD 2> "/dev/null")" \
+		|| return 0
+
+	echo "${ZSH_THEME_GIT_PROMPT_PREFIX}${ref:gs/%/%%}$(__parse_git_dirty)$(__git_remote_status)${ZSH_THEME_GIT_PROMPT_SUFFIX}"
+}
+
+__parse_git_dirty()
+{
+	if [ -n "$(__git_prompt status --porcelain 2> "/dev/null")" ]; then
+		echo "$ZSH_THEME_GIT_PROMPT_DIRTY"
+	else
+		echo "$ZSH_THEME_GIT_PROMPT_CLEAN"
+	fi
+}
+
+__git_remote_status()
+{
+	if [ -n "$(__git_prompt rev-parse --verify @{upstream} 2> "/dev/null")" ]; then
+		local -r ahead="$(__git_prompt rev-list @{upstream}..HEAD 2> "/dev/null" | wc -l)"
+		local -r behind="$(__git_prompt rev-list HEAD..@{upstream} 2> "/dev/null" | wc -l)"
+
+		if [ "$ahead" -gt 0 ] && [ "$behind" -eq 0 ]; then
+			local -r remote_status="${ahead}${ZSH_THEME_GIT_PROMPT_AHEAD_REMOTE}"
+		elif [ "$behind" -gt 0 ] && [ "$ahead" -eq 0 ]; then
+			local -r remote_status="${behind}${ZSH_THEME_GIT_PROMPT_BEHIND_REMOTE}"
+		elif [ "$ahead" -gt 0 ] && [ "$behind" -gt 0 ]; then
+			local -r remote_status="$ZSH_THEME_GIT_PROMPT_DIVERGED_REMOTE"
+		fi
+
+		[ -n "$remote_status" ] && echo "${ZSH_THEME_GIT_PROMPT_REMOTE_STATUS_PREFIX}${remote_status}"
+	fi
+}
+
+preexec()
+{
+	__start="$SECONDS"
+}
+
+precmd()
+{
+	if [ "$__start" -ne 0 ]; then
+		__elapsed="$(( SECONDS - __start ))"
+	else
+		unset __elapsed
+	fi
+
+	__start=0
+}
+
+__get_duration()
+{
+	if [ "$__elapsed" -ge "$ZSH_THEME_DURATION_THRESHOLD" ]; then
+		local duration="$(( __elapsed % 60 ))s"
+		if [ "$__elapsed" -ge 60 ]; then
+			duration="$(( (__elapsed / 60) % 60 ))m $duration"
+			if [ "$__elapsed" -ge 3600 ]; then
+				duration="$(( (__elapsed / 3600) % 24 ))h $duration"
+				if [ "$__elapsed" -ge 86400 ]; then
+					duration="$(( __elapsed / 86400 ))d $duration"
+				fi
+			fi
+		fi
+
+		echo "${ZSH_THEME_DURATION_PREFIX}${duration}${ZSH_THEME_DURATION_SUFFIX}"
+	fi
+}
+
+if [ "$__MINIMAL_ICONS" = true ]; then
+	PS1='%B%(?:%F{green}:%F{red})╭─%F{green}[%n@%M] %F{cyan}%~ $(__git_prompt_info)$(__get_duration)
+%(?:%F{green}:%F{red})╰>> %f%b'
+else
+	PS1='%B%F{cyan}  %(?:%F{cyan}:%F{red}%})%~ %(?:%F{green}:%F{red}) $(__git_prompt_info)$(__get_duration)%f%b'
+fi

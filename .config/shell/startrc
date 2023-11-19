@@ -1,0 +1,4 @@
+# Commands to run on shell start
+stty stop undef
+stty start undef
+neofetch

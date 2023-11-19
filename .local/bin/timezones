@@ -1,0 +1,4 @@
+#!/bin/bash
+
+readonly format="+%I:%M %p"
+dunstify -r 6472 -i dialog-information "Time Zones:" "\n$(TZ="Europe/Berlin" date "$format Germany"; TZ="Asia/Damascus" date "$format Syria"; TZ="Asia/Dubai" date "$format UAE")"

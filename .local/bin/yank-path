@@ -1,0 +1,164 @@
+#!/bin/bash
+
+# Parse command line arguments
+print_help()
+{
+	print_usage
+	echo "Yank (copy) the path(s), name(s) or content of the FILE(s).
+
+  -c, --content          copy the content of the FILE(s)
+  -d, --delimiter        specify the delimiter (default is a line break)
+  -e, --no-extension     exclude extensions
+  -n, --name             copy names instead of paths
+  -p, --escape-spaces    escape spaces
+  -q, --quoted           quoted text
+  -Q, --quoted-if        quoted text only if it contains spaces
+  -s, --silent, --quiet  suppress output
+  -h, --help             display this help and exit"
+}
+
+print_usage()
+{
+	echo "Usage: $0 [OPTION]... [FILE]..."
+}
+
+print_ask_for_help()
+{
+	echo "Try '$0 --help' for more information." >&2
+}
+
+options="cd:enpqQsh"
+long_options="content,delimiter:,no-extension,name,escape-spaces,quoted,quoted-if,silent,quiet,help"
+if ! arguments="$(getopt -o "$options" -l "$long_options" -n "$0" -- "$@")"; then
+	print_ask_for_help
+	exit 1
+fi
+eval set -- "$arguments"
+unset options
+unset long_options
+unset arguments
+
+content=false
+delimiter="\n"
+extension=true
+name=false
+escape_spaces=false
+quoted=false
+quoted_if=false
+silent=false
+
+while true; do
+	case "$1" in
+		-c|--content)
+			content=true
+			shift
+			;;
+		-d|--delimiter)
+			delimiter="$2"
+			shift 2
+			;;
+		-e|--no-extension)
+			extension=false
+			shift
+			;;
+		-n|--name)
+			name=true
+			shift
+			;;
+		-p|--escape-spaces)
+			escape_spaces=true
+			shift
+			;;
+		-q|--quoted)
+			quoted=true
+			shift
+			;;
+		-Q|--quoted-if)
+			quoted_if=true
+			shift
+			;;
+		-s|--silent|--quiet)
+			silent=true
+			shift
+			;;
+		-h|--help)
+			print_help
+			exit 0;
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "$0: invalid option -- '$1'" >&2
+			print_ask_for_help
+			exit 1
+			;;
+	esac
+done
+
+# Yank path
+set -e
+
+printf -v delimiter "%b" "$delimiter"
+clipboard=""
+
+add_path()
+{
+	clipboard="${clipboard}$(set -e; parse_path "$1")${delimiter}"
+}
+
+parse_path()
+{
+	local ret
+
+	if [ "$content" = true ]; then
+		ret="$(cat "$1")"
+	else
+		ret="$(realpath "$1")"
+
+		if [ "$name" = true ]; then
+			ret="$(basename "$ret")"
+		fi
+
+		if [ "$extension" = false ]; then
+			ret="${ret%.*}"
+		fi
+	fi
+
+	if [ "$escape_spaces" = true ]; then
+		ret=$(echo "$ret" | sed 's/ /\\ /g')
+	fi
+
+	if [ "$quoted" = true ] || { [ "$quoted_if" = true ] && [ "$ret" != "${ret% *}" ]; }; then
+		ret="\"${ret}\""
+	fi
+
+	echo "$ret"
+}
+
+print_result()
+{
+	echo -ne "'\e[1;33m"
+	echo -nE "${clipboard}"
+	echo -e "\e[0m' copied to clipboard."
+}
+
+if ! [ -t 0 ]; then
+	add_path "$(cat "/dev/stdin")"
+elif [ "$#" -eq 0 ]; then
+	add_path "."
+fi
+
+while [ "$#" -ne 0 ]; do
+	add_path "$1"
+	shift
+done
+
+clipboard="${clipboard%"$delimiter"}"
+
+wl-copy "$clipboard"
+
+if [ "$silent" = false ]; then
+	print_result
+fi

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+for i in {0..7}; do
+	printf -v c$i %b "\e[3${i}m"
+	printf -v cb$i %b "\e[9${i}m"
+done
+readonly r=$'\e[0m'
+
+cat << EOF
+
+ $c0████$cb0▄$r  $c1████$cb1▄$r  $c2████$cb2▄$r  $c3████$cb3▄$r  $c4████$cb4▄$r  $c5████$cb5▄$r  $c6████$cb6▄$r  $c7████$cb7▄$r
+ $c0████$cb0█$r  $c1████$cb1█$r  $c2████$cb2█$r  $c3████$cb3█$r  $c4████$cb4█$r  $c5████$cb5█$r  $c6████$cb6█$r  $c7████$cb7█$r
+ $c0████$cb0█$r  $c1████$cb1█$r  $c2████$cb2█$r  $c3████$cb3█$r  $c4████$cb4█$r  $c5████$cb5█$r  $c6████$cb6█$r  $c7████$cb7█$r
+ $cb0 ▀▀▀▀  $cb1 ▀▀▀▀   $cb2▀▀▀▀   $cb3▀▀▀▀   $cb4▀▀▀▀   $cb5▀▀▀▀   $cb6▀▀▀▀   $cb7▀▀▀▀$r
+
+EOF

@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Parse command line arguments
+print_help()
+{
+	print_usage
+	echo "Open URL(s) or a list of links from FILE(s) in Brave.
+
+  -i, --incognito   open links in incognito mode
+  -w, --new-window  open each FILE/URL in a new window
+  -h, --help        display this help and exit"
+}
+
+print_usage()
+{
+	echo "Usage: $0 [OPTION]... [FILE|URL]..."
+}
+
+print_ask_for_help()
+{
+	echo "Try '$0 --help' for more information." >&2
+}
+
+options="iwh"
+long_options="incognito,new-window,help"
+if ! arguments="$(getopt -o "$options" -l "$long_options" -n "$0" -- "$@")"; then
+	print_ask_for_help
+	exit 1
+fi
+eval set -- "$arguments"
+unset options
+unset long_options
+unset arguments
+
+open_in_incognito=""
+open_in_new_window=""
+
+while true; do
+	case "$1" in
+		-i|--incognito)
+			open_in_incognito="--incognito"
+			shift
+			;;
+		-w|--new-window)
+			open_in_new_window="--new-window"
+			shift
+			;;
+		-h|--help)
+			print_help
+			exit 0;
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "$0: invalid option -- '$1'" >&2
+			print_ask_for_help
+			exit 1
+			;;
+	esac
+done
+
+# Open links
+run_in_background=true
+
+brave_from_file()
+{
+	local open_in_new_window_copy="$open_in_new_window"
+
+	local IFS=$'\r'
+	while read -r line; do
+		if [ -n "$line" ]; then
+			brave_from_url "$line" "$open_in_new_window_copy"
+			open_in_new_window_copy=""
+		fi
+	done < "$1"
+}
+
+brave_from_url()
+{
+	if [ "$run_in_background" = true ]; then
+		brave $open_in_incognito "$2" "$1" > "/dev/null" &
+		run_in_background=false
+		sleep 1
+	else
+		brave $open_in_incognito "$2" "$1" > "/dev/null"
+	fi
+}
+
+if ! [ -t 0 ]; then
+	brave_from_file "/dev/stdin"
+elif [ "$#" -eq 0 ]; then
+	print_usage >&2
+	print_ask_for_help
+	exit 1
+fi
+
+while [ "$#" -ne 0 ]; do
+	if [ -f "$1" ]; then
+		brave_from_file "$1"
+	else
+		brave_from_url "$1" "$open_in_new_window"
+	fi
+	shift
+done

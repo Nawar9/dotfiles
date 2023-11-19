@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+readonly mount_point="${MOUNT_HOME}/SSH-Phone"
+
+if [ -z "$(mount | grep "$mount_point")" ]; then
+	if ! [ -d "$mount_point" ]; then
+		sudo mkdir -p "$mount_point"
+		sudo chown "$(whoami)" "$mount_point"
+	fi
+
+	readonly dir_to_mount="/storage/emulated/0"
+
+	sshfs "${1:-$PHONE_IP}":"$dir_to_mount" "$mount_point" -p "${2:-$PHONE_PORT}";
+fi
+
+echo "$mount_point"

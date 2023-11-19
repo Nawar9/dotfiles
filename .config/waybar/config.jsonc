@@ -1,0 +1,156 @@
+{
+	"spacing": 0,
+	"height": 28,
+	"layer": "top",
+	"modules-left": ["hyprland/workspaces", "hyprland/window"],
+	"modules-center": ["clock"],
+	"modules-right": [
+		"cpu",
+		"memory",
+		"network",
+		"pulseaudio",
+		"tray",
+		"battery",
+		"custom/notification",
+		"custom/power"
+	],
+	"hyprland/window": {
+		"format": "  {}",
+		"max-length": 60,
+		"interval": 1,
+		"height": 20
+	},
+	"custom/notification": {
+		"tooltip": true,
+		"format": "{icon}",
+		"format-icons": {
+			"notification": "",
+			"none": "",
+			"dnd-notification": "",
+			"dnd-none": ""
+		},
+		"return-type": "json",
+		"exec-if": "which swaync-client",
+		"exec": "swaync-client -swb",
+		"on-click": "swaync-client -t -sw",
+		"on-click-right": "swaync-client -d -sw",
+		"escape": true
+	},
+	"custom/power": {
+		"tooltip": false,
+		"on-click": "~/.config/rofi/applets/bin/powermenu.sh",
+		"format": "⏻"
+	},
+	"hyprland/workspaces": {
+		"disable-scroll": true,
+		"sort-by-number": true,
+		"all-outputs": true,
+		"on-click": "activate",
+		"on-scroll-up": "hyprctl dispatch workspace e+1",
+		"on-scroll-down": "hyprctl dispatch workspace e-1",
+		"format": "{icon}",
+		"persistent_workspaces": {
+			"1": [],
+			"2": [],
+			"3": [],
+			"4": [],
+			"5": [],
+			"6": [],
+			"7": [],
+			"8": [],
+			"9": [],
+			"10": []
+		},
+		"format-icons": {
+			"1": "1",
+			"2": "2",
+			"3": "3",
+			"4": "4",
+			"5": "5",
+			"6": "6",
+			"7": "7",
+			"8": "8",
+			"9": "9",
+			"10": "0",
+			"urgent": ""
+		}
+	},
+	"tray": {
+		"spacing": 10
+	},
+    "clock": {
+		"locale": "de_DE.UTF-8",
+		"timezones": ["Europe/Berlin", "Asia/Damascus", "Asia/Dubai"],
+		"format": "{:%a %x   | %H:%M %Z  }",
+		"tooltip-format": "<big><b><u>{:%m %B %Y}</u></b></big>\n\n<tt><small>{calendar}</small></tt>",
+		"on-click": "timezones",
+        "calendar": {
+                    "mode"          : "year",
+                    "mode-mon-col"  : 3,
+                    "weeks-pos"     : "right",
+                    "on-scroll"     : 1,
+                    "format": {
+                              "months":     "<span color='#ffead3'><b>{}</b></span>",
+                              "days":       "<span color='#ecc6d9'><b>{}</b></span>",
+                              "weeks":      "<span color='#99ffdd'><b>W{}</b></span>",
+                              "weekdays":   "<span color='#ffcc66'><b>{}</b></span>",
+                              "today":      "<span color='#ff6699'><b><u>{}</u></b></span>"
+                              }
+                    },
+        "actions":  {
+                    "on-click-right": "mode",
+                    "on-scroll-up": "shift_up",
+                    "on-scroll-down": "shift_down"
+                    }
+    },
+	"cpu": {
+		"format": "   {usage}%",
+		"tooltip": false
+	},
+	"memory": {
+		"format": " {}%"
+	},
+	"battery": {
+		"states": {
+			"good": 95,
+			"warning": 30,
+			"critical": 15
+		},
+		"format": "{icon}{capacity}%",
+		"format-charging": " {capacity}%",
+		"format-plugged": " {capacity}%",
+		"format-alt": "{icon}{time}",
+		"format-icons": ["  ", "  ", "  ", "  ", "  "]
+	},
+	"battery#bat2": {
+		"bat": "BAT2"
+	},
+	"network": {
+		"format-wifi": "  {essid}",
+		"format-ethernet": "  Connected",
+		"format-disconnected": " Disconnected",
+		"tooltip-format-wifi": " {ifname} @ {essid}\nIP: {ipaddr}\nStrength: {signalStrength}%\nFreq: {frequency}MHz\n⬆️ {bandwidthUpBits} ⬇️ {bandwidthDownBits}",
+		"tooltip-format-ethernet": " {ifname}\nIP: {ipaddr}\n⬆️ {bandwidthUpBits} ⬇️ {bandwidthDownBits}",
+		"format-linked": "{ifname} (No IP) ",
+		"on-click-right": "nm-connection-editor",
+		"on-click": "bash './rofi-network-manager.sh'"
+	},
+	"pulseaudio": {
+		"format": "{format_source} {icon} {volume}%",
+		"format-bluetooth": "{volume}%  {format_source}",
+		"format-bluetooth-muted": "   {format_source}",
+		"format-muted": " {format_source}",
+		"format-source": " {volume}%",
+		"format-source-muted": "  ",
+		"format-icons": {
+			"headphone": "",
+			"hands-free": "",
+			"headset": "",
+			"phone": "",
+			"portable": "",
+			"car": "",
+			"default": ["", "", ""]
+		},
+		"on-click": "pavucontrol"
+	}
+}

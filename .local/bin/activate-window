@@ -1,0 +1,20 @@
+#!/bin/bash
+
+readonly window="$(hypr-get-clients "$@" | jq -r '.[0]')"
+
+if [ "$window" = "null" ]; then
+	exit 1
+fi
+
+readonly window_address="$(echo "$window" | jq -r '.address')"
+readonly workspace_id="$(echo "$window" | jq -r '.workspace.id')"
+readonly workspace="$(hyprctl workspaces -j | jq -r ".[] | select(.id == $workspace_id)")"
+readonly workspace_has_fullscreen="$(echo "$workspace" | jq -r '.hasfullscreen')"
+readonly last_active_window_in_workspace="$(echo "$workspace" | jq -r '.lastwindow')"
+
+if [ "$workspace_has_fullscreen" = "true" ] && [ "$last_active_window_in_workspace" != "$window_address" ]; then
+	hyprctl dispatch focuswindow "address:$last_active_window_in_workspace" > "/dev/null"
+	hyprctl dispatch fullscreen 1 > "/dev/null"
+fi
+
+hyprctl dispatch focuswindow "address:$window_address" > "/dev/null"

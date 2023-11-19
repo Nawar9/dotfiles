@@ -1,0 +1,100 @@
+# XDG Base Directory
+export XDG_CONFIG_HOME="${HOME}/.config"
+export XDG_CACHE_HOME="${HOME}/.cache"
+export XDG_DATA_HOME="${HOME}/.local/share"
+export XDG_STATE_HOME="${HOME}/.local/state"
+
+# Paths
+export MOUNT_HOME="/run/media/$(whoami)"
+export SHELL_HOME="${XDG_CONFIG_HOME}/shell"
+export DOTFILES_DIR="${HOME}/dotfiles"
+export GENERAL_THEME_DIR="${XDG_CONFIG_HOME}/general-theme"
+
+# Colors
+source "${GENERAL_THEME_DIR}/colors"
+
+# System environment variables
+if [[ ":${PATH}:" != *":${HOME}/.local/bin:"* ]]; then
+	export PATH="${PATH:+${PATH}:}${HOME}/.local/bin"
+fi
+export EDITOR="nvim"
+export PAGER="less"
+
+# Move config files from $HOME
+export ZDOTDIR="${XDG_CONFIG_HOME}/zsh"
+
+# Program settings
+export LESS="-R"
+export AUTO_NOTIFY_THRESHOLD=10
+export AUTO_NOTIFY_WHITELIST=("sleep" "cp" "mv" "rm" "pacman" "yay")
+
+# Fuzzy finder
+export FZF_DEFAULT_COMMAND="find . -type d -name \".git\" -prune -o -type f -printf \"%P\n\" 2> '/dev/null'"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND="find . -mindepth 1 -type d \( -not -path \"*/.*\" -o \( -path \"*/.config/*\" -a -not -path \"*/.*/.*\" \) \) -printf \"%P\n\" 2> '/dev/null'"
+
+export FZF_DEFAULT_OPTS="\
+--extended \
+--no-multi \
+--ansi \
+--height=40% \
+--layout=reverse \
+--border=rounded \
+--border-label=' FUZZY-FINDER ' \
+--preview-label=' PREVIEW ' \
+\
+--bind='\
+change:first,\
+ctrl-y:execute-silent(wl-copy {+}),\
+alt-<:first,\
+alt->:last,\
+alt-p:toggle-preview' \
+\
+--color='\
+fg:bright-yellow,\
+preview-fg:bright-white,\
+bg:-1,hl:bright-magenta,\
+fg+:bright-white,\
+bg+:${PRIMARY_BACKGROUND},\
+gutter:-1,hl+:bright-red,\
+query:bright-green,\
+disabled:bright-red,\
+info:white,\
+border:bright-white,\
+scrollbar:bright-yellow,\
+preview-border:bright-yellow,\
+preview-scrollbar:bright-yellow,\
+label:bold:bright-red,\
+prompt:bold:bright-green,\
+pointer:bold:bright-red,\
+marker:bright-white,\
+spinner:bright-green,\
+header:bold:bright-red'"
+
+fzf_ctrl_t_border_label=" FUZZY-FINDER (FILES) "
+fzf_ctrl_t_preview_label=" PREVIEW "
+fzf_ctrl_t_preview_command="bat --color=always --style='plain' {1} 2> '/dev/null'"
+fzf_alt_c_border_label=" FUZZY-FINDER (CD) "
+fzf_alt_c_preview_label=" DIR-TREE "
+fzf_alt_c_preview_command="tree -C {} | head -n 1000"
+
+export FZF_CTRL_T_OPTS="\
+--border-label='$fzf_ctrl_t_border_label' \
+--preview-label='$fzf_ctrl_t_preview_label' \
+--preview='$fzf_ctrl_t_preview_command' \
+--preview-window='hidden' \
+--header='Press CTRL-R for directories or CTRL-T for files:' \
+\
+--bind='\
+ctrl-r:reload($FZF_ALT_C_COMMAND)+first+change-border-label[$fzf_alt_c_border_label]+change-preview-label($fzf_alt_c_preview_label)+change-preview($fzf_alt_c_preview_command),\
+ctrl-t:reload($FZF_CTRL_T_COMMAND)+first+change-border-label[$fzf_ctrl_t_border_label]+change-preview-label($fzf_ctrl_t_preview_label)+change-preview($fzf_ctrl_t_preview_command)'"
+
+export FZF_ALT_C_OPTS="\
+--border-label='$fzf_alt_c_border_label' \
+--preview-label='$fzf_alt_c_preview_label' \
+--preview='$fzf_alt_c_preview_command'"
+
+unset fzf_ctrl_t_border_label fzf_ctrl_t_preview_label fzf_ctrl_t_preview_command fzf_alt_c_border_label fzf_alt_c_preview_label fzf_alt_c_preview_command
+
+# Internal
+export __MINIMAL_ICONS="$([[ -n "$SSH_CONNECTION" || "$(tty)" = "/dev/tty"* ]] && echo "true" || echo "false")"

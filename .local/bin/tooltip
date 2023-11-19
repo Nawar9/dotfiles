@@ -1,0 +1,18 @@
+#!/bin/bash
+
+readonly LOG_FILE="/tmp/tooltip.log"
+
+if [ -f "$LOG_FILE" ]; then
+	readonly pid=$(cat "$LOG_FILE")
+	pkill -P $pid
+	kill $pid 2> "/dev/null"
+fi
+echo "$$" > "$LOG_FILE"
+
+eval $(xdotool getmouselocation --shell)
+X=$((X+10))
+Y=$((Y+10))
+
+yad --text="$(echo "$1" | sed "s|.*|<span color='white'> & </span>|")" --title="Tooltip" --timeout=${2:-2} --geometry=+$X+$Y --borders=4 --fixed --no-buttons --undecorated --on-top --skip-taskbar
+
+rm "$LOG_FILE"

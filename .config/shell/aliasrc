@@ -1,0 +1,36 @@
+# Aliases
+alias cp="cp -iv"
+alias mv="mv -iv"
+alias rm="rm -Iv"
+alias mkdir="mkdir -v"
+alias bc="bc -ql"
+alias si="swayimg -f 2> /dev/null"
+alias cat="bat"
+alias cmatrix="cmatrix -b"
+alias pipes="pipes.sh -p 3"
+
+alias grep="grep --color=auto"
+alias diff="diff --color=auto"
+alias ip="ip -color=auto"
+alias pacman="pacman --color=auto"
+alias yay="yay --color=auto"
+
+alias restow="stow -R -d "$DOTFILES_DIR" -t "$HOME" ."
+alias vw="nvim -c 'VimwikiIndex'"
+
+alias yp="yank-path"
+alias yn="yank-path -nQ"
+alias yf="yank-path -cs"
+
+# Change "ls" to "eza"
+[ "$__MINIMAL_ICONS" = true ] || eza_icons="--icons "
+alias ls="eza ${eza_icons}--group-directories-first"
+alias l="eza -aabFhl ${eza_icons}--group-directories-first --git --time-style=relative"
+alias ll="eza -@aabFghHilmMSuU ${eza_icons}--group-directories-first --git --color-scale --time-style=long-iso"
+alias llm="eza -aabFhlr ${eza_icons}--git --sort=modified --time-style=relative"
+alias lls="eza -aabFhlr ${eza_icons}--group-directories-first --git --color-scale --sort=size --time-style=long-iso"
+alias lle="eza -aabFhl ${eza_icons}--group-directories-first --git --sort=extension --time-style=long-iso"
+alias la="eza -aa ${eza_icons}--group-directories-first"
+alias l.="eza -aa --group-directories-first | grep -E '^\.'"
+alias lt="ls --tree"
+unset eza_icons

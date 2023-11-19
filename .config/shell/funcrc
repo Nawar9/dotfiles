@@ -1,0 +1,97 @@
+# Variables
+readonly GIT_LOG_FORMAT="%C(bold)%h%C(auto)%d%C(no-bold) %s%C(white) [%aN]%C(black)%C(bold) %cr%C(auto)"
+
+# Functions
+pn()
+{
+	local mount_point
+	if mount_point=$(ssh-phone $@); then
+		cd "$mount_point"
+	fi
+}
+
+# Fuzzy finder
+alias fpac="__fpackage 'pacman' 'sudo'"
+alias fyay="__fpackage 'yay' ''"
+__fpackage()
+{
+	local -r install_header="\e[1;32m---------------------------------- INSTALLING ----------------------------------\e[0m\n"
+	local -r uninstall_header="\e[1;31m--------------------------------- UNINSTALLING ---------------------------------\e[0m\n"
+
+	local -a -r fzf_options=(
+		--multi
+		--ansi
+		--height=100%
+		--query="$3"
+		--border-label=" $(echo "$1" | tr '[:lower:]' '[:upper:]') "
+		--preview-label=" INFO "
+		--preview="$1 -Si {1}"
+		--header="Press ENTER to install or SHIFT-DELETE to unistall:"
+		--bind="shift-delete:become(echo '$uninstall_header'; $2 $1 --color=auto -Rns {+1})"
+		--bind="return:become(echo '$install_header'; $2 $1 --color=auto -S {+1})"
+	)
+
+	$1 -Sl | awk '{ sub(":$", "]", $4); print $2" \033[37m"$4"\033[0m" }' | fzf "${fzf_options[@]}"
+}
+
+fvim()
+{
+	local -a -r fzf_options=(
+		--multi
+		--query="$1"
+		--border-label=" NVIM "
+		--preview="bat --color=always --style='plain' {1} 2> '/dev/null'"
+		--preview-window="hidden"
+	)
+
+	fzf "${fzf_options[@]}"  | xargs -r nvim
+}
+
+fman()
+{
+	local -a -r fzf_options=(
+		--no-multi
+		--query="$1"
+		--border-label=" MAN PAGES "
+		--preview="echo -E {} | tr -d '()' | awk '{printf \"%s %s\n\", \$2, \$1 }' | xargs -r man 2> '/dev/null'"
+	)
+
+	man -k . | fzf "${fzf_options[@]}" | tr -d '()' | awk '{printf "%s %s\n", $2, $1 }' | xargs -r man 2> "/dev/null"
+}
+
+fgl()
+{
+	local git_log
+	git_log="$(git log --graph --color=always --format="$GIT_LOG_FORMAT" "$@" )" || return 1
+
+	local -a -r fzf_options=(
+		--no-multi
+		--ansi
+		--no-sort
+		--tiebreak="index"
+		--border-label=" GIT-LOG "
+		--preview-label=" GIT-SHOW "
+		--preview="echo -E {} | grep -o '[a-f0-9]\{7\}' | head -n 1 | xargs -r git show --color=always"
+		--bind="ctrl-s:toggle-sort"
+		--bind="return:execute(echo -E {} | grep -o '[a-f0-9]\{7\}' | head -n 1 | xargs -rI % sh -c 'git show --color=always % | less -R')"
+	)
+
+	echo -E "$git_log" | fzf "${fzf_options[@]}"
+}
+
+fgb()
+{
+	local branches branch
+	branches="$(git branch -vv --color=always)" || return 1
+
+	local -a -r fzf_options=(
+		--no-multi
+		--ansi
+		--border-label=" GIT-BRANCH "
+		--preview-label=" GIT-LOG "
+		--preview="if [ {1} = '*' ]; then git log --graph --color=always --format='$GIT_LOG_FORMAT' {2}; else git log --graph --color=always --format='$GIT_LOG_FORMAT' {1}; fi"
+	)
+
+	branch="$(echo -E "$branches" | fzf "${fzf_options[@]}")" &&
+	git checkout "$(echo -E "$branch" | awk '{ print $1 }')"
+}

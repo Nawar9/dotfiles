@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# Parse command line arguments
+print_help()
+{
+	print_usage
+	echo "Replace the lines between two markers in FILE with TEXT.
+
+  -c, --comment-char=CHAR    specify the comment character that is part of
+                             the start and end MARKER (default is \"$default_comment_char\")
+  -s, --start-marker=MARKER  specify the start marker. MARKER is always
+                             prefixed by the CHAR specified
+                             with --comment-char
+  -e, --end-marker=MARKER    specify the end marker. MARKER is always
+                             prefixed by the CHAR specified
+                             with --comment-char
+  -r, --remove-markers       remove the markers when replacing lines
+  -h, --help                 display this help and exit
+
+If --start-marker isn't specified, the default start marker will be used:
+\"$default_start_marker\"
+Note that the start marker is always prefixed with the comment character
+specified with --comment-char.
+
+If --end-marker isn't specified, the default end marker will be used:
+\"$default_end_marker\"
+Note that the end marker is always prefixed with the comment character
+specified with --comment-char."
+}
+
+print_usage()
+{
+	echo "Usage: $0 [OPTION]... TEXT FILE"
+}
+
+print_ask_for_help()
+{
+	echo "Try '$0 --help' for more information." >&2
+}
+
+options="c:s:e:rh"
+long_options="comment-char:,start-marker:,end-marker:,remove-markers,help"
+if ! arguments="$(getopt -o "$options" -l "$long_options" -n "$0" -- "$@")"; then
+	print_ask_for_help
+	exit 1
+fi
+eval set -- "$arguments"
+unset options
+unset long_options
+unset arguments
+
+default_comment_char="#"
+comment_char="$default_comment_char"
+readonly default_start_marker=" ----------------------------- SED START MARKER -----------------------------"
+start_marker="$default_start_marker"
+readonly default_end_marker=" ------------------------------ SED END MARKER ------------------------------"
+end_marker="$default_end_marker"
+remove_markers=false
+
+while true; do
+	case "$1" in
+		-c|--comment-char)
+			comment_char="$2"
+			shift 2
+			;;
+		-s|--start-marker)
+			start_marker="$2"
+			shift 2
+			;;
+		-e|--end-marker)
+			end_marker="$2"
+			shift 2
+			;;
+		-r|--remove-markers)
+			remove_markers=true
+			shift
+			;;
+		-h|--help)
+			print_help
+			exit 0;
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "$0: invalid option -- '$1'" >&2
+			print_ask_for_help
+			exit 1
+			;;
+	esac
+done
+
+# Sed replace
+set -e
+
+[ "$#" -lt 2 ] && print_usage >&2 && print_ask_for_help && exit 1
+
+start_marker="${comment_char}${start_marker}"
+end_marker="${comment_char}${end_marker}"
+
+readonly ln_start="$(grep -n "^$start_marker$" "$2" | cut -d : -f 1)"
+readonly ln_end="$(grep -n "^$end_marker$" "$2" | cut -d : -f 1)"
+
+[ -z "$ln_start" ] && echo "$0: Could not find start marker!" >&2 && exit 1
+[ "$(wc -l <<< "$ln_start")" -gt 1 ] && echo "$0: Multiple start markers found!" >&2 && exit 1
+[ -z "$ln_end" ] && echo "$0: Could not find end marker!" >&2 && exit 1
+[ "$(wc -l <<< "$ln_end")" -gt 1 ] && echo "$0: Multiple end markers found!" >&2 && exit 1
+[ "$ln_start" -gt "$ln_end" ] && echo "$0: End marker before start marker!" >&2 && exit 1
+
+new_text="$(awk '{ printf "%s%s", (NR > 1 ? "\\n" : ""), $0 }' <<< $1)"
+[ "$remove_markers" = false ] && new_text="${start_marker}\n${new_text}\n${end_marker}"
+
+sed -i "${ln_start},${ln_end}c\\${new_text}" "$2"

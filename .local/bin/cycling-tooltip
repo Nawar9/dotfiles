@@ -1,0 +1,23 @@
+#!/bin/bash
+
+readonly LOG_FILE="/tmp/cycling-tooltip.log"
+
+if [ -f "$LOG_FILE" ]; then
+	read pid count < <(awk '{$2 = ($2 + 1) % ('$#' - 1); print $1, $2}' "$LOG_FILE")
+	readonly previous_args=$(ps -p $pid -o args=)
+	kill $pid
+	readonly args=$@
+
+	if [ "${previous_args: -${#args}}" = "$args" ]; then
+		echo "$$ $count" > "$LOG_FILE"
+		tooltip "${@:$((count + 2)):1}" "$1"
+
+		rm "$LOG_FILE"
+		exit
+	fi
+fi
+
+echo "$$ 0" > "$LOG_FILE"
+tooltip "$2" "$1"
+
+rm "$LOG_FILE"

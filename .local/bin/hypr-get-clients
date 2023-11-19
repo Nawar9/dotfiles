@@ -1,0 +1,12 @@
+#!/bin/bash
+
+clients="$(hyprctl clients -j)"
+
+IFS="=" 
+while [ "$#" -ne 0 ]; do
+	read -r key value <<< "$1"
+	clients="$(echo "$clients" | jq -r "[ .[] | select($key | tostring | test(\"$value\")) ]")"
+	shift
+done
+
+echo "$clients"

@@ -1,0 +1,211 @@
+# Use vi key bindings
+bindkey -v
+export KEYTIMEOUT=1
+
+# Change cursor shape for different vi modes
+# and put the terminal in application mode when zle is active
+zle-keymap-select()
+{
+	if [ "$KEYMAP" = "main" ]; then
+		echo -ne "\e[5 q"
+	else
+		echo -ne "\e[1 q"
+	fi
+}
+
+if [ -v 'terminfo[smkx]' ] && [ -v 'terminfo[rmkx]' ]; then
+	function zle-line-init()
+	{
+		echoti smkx
+		echo -ne "\e[5 q"
+	}
+
+	zle-line-finish()
+	{
+		echoti rmkx
+	}
+
+	zle -N zle-line-finish
+else
+	zle-line-init()
+	{
+		echo -ne "\e[5 q"
+	}
+fi
+
+zle -N zle-keymap-select
+zle -N zle-line-init
+
+# Text object selection
+autoload -Uz select-quoted select-bracketed
+zle -N select-quoted
+zle -N select-bracketed
+for m in visual viopp; do
+	for c in {a,i}{\',\",\`}; do
+		bindkey -M $m $c select-quoted
+	done
+	for c in {a,i}{\(,\),\[,],\{,\},\<,\>,b,B}; do
+		bindkey -M $m $c select-bracketed
+	done
+done
+unset m c
+
+# Surrounding (Incompatible with the plugin zsh-syntax-highlighting.
+# A workaround would be to set KEYTIMEOUT to a higher value)
+autoload -Uz surround
+zle -N delete-surround surround
+zle -N add-surround surround
+zle -N change-surround surround
+bindkey -M vicmd cs change-surround
+bindkey -M vicmd ds delete-surround
+bindkey -M vicmd ys add-surround
+bindkey -M visual S add-surround
+
+# Bind both command and insert (main) mode in vi keymaps
+bind_vi()
+{
+	bindkey "$1" $2
+	bindkey -M vicmd "$1" $2
+}
+
+# [UpArrow]|[Ctrl-p] - Search history forward
+autoload -Uz up-line-or-beginning-search
+zle -N up-line-or-beginning-search
+if [ -n "${terminfo[kcuu1]}" ]; then
+	bind_vi "${terminfo[kcuu1]}" up-line-or-beginning-search
+fi
+bind_vi "^p" up-line-or-beginning-search
+# [DownArrow]|[Ctrl-n] - Search history backward
+autoload -Uz down-line-or-beginning-search
+zle -N down-line-or-beginning-search
+if [ -n "${terminfo[kcud1]}" ]; then
+	bind_vi "${terminfo[kcud1]}" down-line-or-beginning-search
+fi
+bind_vi "^n" down-line-or-beginning-search
+
+# [Ctrl-UpArrow]|[PageUp]|[Alt-Shift-,] - Go to beginning of buffer or history
+bind_vi "^[[1;5A" beginning-of-buffer-or-history
+if [ -n "${terminfo[kpp]}" ]; then
+	bind_vi "${terminfo[kpp]}" beginning-of-buffer-or-history
+fi
+bind_vi "^[<" beginning-of-buffer-or-history
+# [Ctrl-DownArrow]|[PageDown]|[Alt-Shift-.] - Go to end of buffer or history
+bind_vi "^[[1;5B" end-of-buffer-or-history
+if [ -n "${terminfo[knp]}" ]; then
+	bind_vi "${terminfo[knp]}" end-of-buffer-or-history
+fi
+bind_vi "^[>" end-of-buffer-or-history
+
+# [Ctrl-Alt-UpArrow]|[Ctrl-Alt-p] - History substring search up
+bind_vi "^[[1;7A" history-substring-search-up
+bind_vi "^[^p" history-substring-search-up
+# [Ctrl-Alt-DownArrow]|[Ctrl-Alt-n] - History substring search down
+bind_vi "^[[1;7B" history-substring-search-down
+bind_vi "^[^n" history-substring-search-down
+
+# [Ctrl-RightArrow]|[Alt-f] - Move forward one word
+bind_vi "^[[1;5C" forward-word
+bindkey "^[f" forward-word
+# [Ctrl-LeftArrow]|[Alt-b] - Move backward one word
+bind_vi "^[[1;5D" backward-word
+bindkey "^[b" backward-word
+
+# [Shift-Tab] - Move through the completion menu backwards
+if [ -n "${terminfo[kcbt]}" ]; then
+	bindkey "${terminfo[kcbt]}" reverse-menu-complete
+fi
+
+# [Home]|[Ctrl-a] - Go to beginning of line
+if [ -n "${terminfo[khome]}" ]; then
+	bind_vi "${terminfo[khome]}" beginning-of-line
+fi
+bindkey "^a" beginning-of-line
+# [End]|[Ctrl-e] - Go to end of line
+if [ -n "${terminfo[kend]}" ]; then
+	bind_vi "${terminfo[kend]}" end-of-line
+fi
+bindkey "^e" end-of-line
+
+# [Insert] - Toggle overwrite mode and enter insert mode
+if [ -n "${terminfo[kich1]}" ]; then
+	bindkey "${terminfo[kich1]}" overwrite-mode
+	bindkey -M vicmd "${terminfo[kich1]}" vi-insert
+fi
+
+# [Delete]|[Ctrl-d] - Delete next character
+if [ -n "${terminfo[kdch1]}" ]; then
+	bind_vi "${terminfo[kdch1]}" delete-char
+fi
+bindkey "^d" delete-char
+# [Backspace]|[Ctrl-h] - Delete previous character
+bindkey "^?" backward-delete-char
+bindkey "^h" backward-delete-char
+
+# [Ctrl-Delete]|[Alt-d] - Delete next word
+bindkey "^[[3;5~" kill-word
+bindkey "^[d" kill-word
+# [Alt-Backspace]|[Ctrl-w] - Delete previous word
+bindkey "^[^?" backward-kill-word
+bindkey "^w" backward-kill-word
+
+# [Ctrl-k] - Delete after cursor
+bindkey "^k" kill-line
+# [Ctrl-u] - Delete before cursor
+bindkey "^u" backward-kill-line
+
+# [Ctrl-f] - Go forward one character
+bindkey "^f" forward-char
+# [Ctrl-b] - Go back one character
+bindkey "^b" backward-char
+
+# [Ctrl-r] - Search backward incrementally for a specified string
+bindkey "^r" history-incremental-search-backward
+# [Ctrl-s] - Search forward incrementally for a specified string
+bindkey "^s" history-incremental-search-forward
+
+# [Space] - Perform history expansion
+bindkey " " magic-space
+
+# [Alt-m] - Duplicate previous word
+bindkey "^[m" copy-prev-shell-word
+
+# [Ctrl-o] - Copy the active line from the command line buffer 
+__copy_buffer()
+{
+	echo -n "$BUFFER" | wl-copy
+	zle kill-buffer
+}
+zle -N __copy_buffer
+bind_vi "^o" __copy_buffer
+
+# [Alt-e] - Edit the current command line in $EDITOR
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bind_vi "^[e" edit-command-line
+
+# [h|j|k|l] - Use vim keys in tab complete menu
+bindkey -M menuselect "h" vi-backward-char
+bindkey -M menuselect "j" vi-down-line-or-history
+bindkey -M menuselect "k" vi-up-line-or-history
+bindkey -M menuselect "l" vi-forward-char
+
+# [n] - Move to the first line of the next group of matches
+bindkey -M menuselect 'n' vi-forward-blank-word
+# [p] - Move to the last line of the previous group of matches
+bindkey -M menuselect 'p' vi-backward-blank-word
+
+# [Ctrl-o] - Accept suggestion and start with next completion
+bindkey -M menuselect "^o" accept-and-infer-next-history
+# [Ctrl-p] Accept multiple matches
+bindkey -M menuselect '^p' accept-and-hold
+
+# [Esc] - Cancel completion
+bindkey -M menuselect '^[' send-break
+# [Ctrl-u] Undo in tab complete menu
+bindkey -M menuselect '^u' undo
+
+# [Ctrl-n] Enter interactive mode in tab complete menu
+bindkey -M menuselect '^n' vi-insert
+
+# Key bindings clean up
+unfunction bind_vi
