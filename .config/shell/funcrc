@@ -2,6 +2,11 @@
 readonly GIT_LOG_FORMAT="%C(bold)%h%C(auto)%d%C(no-bold) %s%C(white) [%aN]%C(black)%C(bold) %cr%C(auto)"
 
 # Functions
+lf()
+{
+    cd "$(command lf -print-last-dir "$@")"
+}
+
 pn()
 {
 	local mount_point
