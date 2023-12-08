@@ -24,8 +24,8 @@ export PAGER="less"
 export ZDOTDIR="${XDG_CONFIG_HOME}/zsh"
 
 # Program settings
-export LESS="-R -M --use-color -DPkY\$DSkY\$DNR"
-export MANPAGER="less -Dd+R\$Du+M"
+export LESS="-R -M --use-color -DPkY\$DSkY\$DNR\$"
+export MANPAGER="less -Dd+R -Du+M"
 export MANROFFOPT="-P -c"
 export AUTO_NOTIFY_THRESHOLD=10
 export AUTO_NOTIFY_WHITELIST=("sleep" "cp" "mv" "rm" "pacman" "yay")
