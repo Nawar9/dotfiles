@@ -1,14 +1,14 @@
 -- INFO: dead code
 local M = {}
 
-function M.get_parent_win(win)
-	if not win then
-		win = vim.api.nvim_get_current_win()
-	elseif not vim.api.nvim_win_is_valid(win) then
+function M.get_parent_win_id(win_id)
+	if not win_id then
+		win_id = vim.api.nvim_get_current_win()
+	elseif not vim.api.nvim_win_is_valid(win_id) then
 		return nil
 	end
 
-	local win_config = vim.api.nvim_win_get_config(win)
+	local win_config = vim.api.nvim_win_get_config(win_id)
 
 	if win_config.relative == "win" and vim.api.nvim_win_is_valid(win_config.win) then
 		return win_config.win
@@ -17,15 +17,15 @@ function M.get_parent_win(win)
 	return nil
 end
 
-function M.get_root_win(win)
-	local parent_win = win or vim.api.nvim_get_current_win()
+function M.get_root_win_id(win_id)
+	local parent_win_id = win_id or vim.api.nvim_get_current_win()
 
-	while parent_win ~= nil do
-		win = parent_win
-		parent_win = M.get_parent_win(win)
+	while parent_win_id ~= nil do
+		win_id = parent_win_id
+		parent_win_id = M.get_parent_win_id(win_id)
 	end
 
-	return win
+	return win_id
 end
 
 return M

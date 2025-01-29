@@ -14,22 +14,22 @@ local function hover()
 		end
 	end
 
-	local winid = require("ufo").peekFoldedLinesUnderCursor(false, false)
+	local win_id = require("ufo").peekFoldedLinesUnderCursor(false, false)
 
-	if winid then
+	if win_id then
 		vim.api.nvim_set_option_value(
 			"winhighlight",
 			"Normal:Folded,CursorLine:UfoPreviewCursorLine,Visual:UfoPreviewVisual",
-			{ scope = "local", win = winid }
+			{ scope = "local", win = win_id }
 		)
 
-		local bufnr = vim.api.nvim_win_get_buf(winid)
+		local buf_nr = vim.api.nvim_win_get_buf(win_id)
 		local keys = { "a", "i", "o", "A", "I", "O" }
 
 		for _, key in ipairs(keys) do
 			-- TODO: ignore which key?
 			local desc = vim.fn.maparg(key, "n", false, true).desc
-			vim.keymap.set("n", key, "<CR>" .. key, { desc = desc, buffer = bufnr, remap = true })
+			vim.keymap.set("n", key, "<CR>" .. key, { desc = desc, buffer = buf_nr, remap = true })
 		end
 
 		for _, keymap in ipairs(lsp.keymaps) do
@@ -37,15 +37,15 @@ local function hover()
 				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<CR>", true, true, true), "x", false)
 				keymap.callback()
 			end or function()
-				vim.api.nvim_win_close(winid, false)
+				vim.api.nvim_win_close(win_id, false)
 				keymap.callback()
-			end, { desc = keymap.desc, buffer = bufnr, remap = keymap.ufo_trace })
+			end, { desc = keymap.desc, buffer = buf_nr, remap = keymap.ufo_trace })
 		end
 
 		vim.keymap.set("n", "K", function()
 			vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<CR>", true, true, true), "x", false)
 			fallback_hover()
-		end, { desc = hover_desc, buffer = bufnr })
+		end, { desc = hover_desc, buffer = buf_nr })
 	else
 		fallback_hover()
 	end

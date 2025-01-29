@@ -7,7 +7,12 @@ return {
 
 		-- HACK: https://github.com/luukvbaal/statuscol.nvim/issues/150
 		-- and fix status git and diagnostic signs `Cul` when changing theme and remove Cul overrides from catppuccine
-		vim.opt.numberwidth = vim.opt.numberwidth - 1
+		for _, win_id in ipairs(vim.api.nvim_list_wins()) do
+			local numberwidth = vim.wo[win_id].numberwidth - 1
+			if numberwidth > 0 then
+				vim.wo[win_id].numberwidth = numberwidth
+			end
+		end
 
 		return {
 			thousands = false,
